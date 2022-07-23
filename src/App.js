@@ -1,34 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Signup from './Components/Signup';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Dashboard from './Components/Dashboard';
 import Login from './Components/Login';
-import { auth } from './Firebase';
 import PageNotFound from './Components/PageNotFound';
-import { onAuthStateChanged } from 'firebase/auth';
+import { AuthProvider, useAuth } from './Contexts/AuthContext';
+import ProtectedRoute from './Components/ProtectedRoute';
+import ResetPW from './Components/ResetPW';
 
 function App() {
-	const [user, setUser] = useState({});
-
-	useEffect(() => {
-		onAuthStateChanged(auth, (currentUser) => {
-			setUser(currentUser);
-		});
-	}, []);
+	const { currentUser } = useAuth();
 
 	return (
 		<Router>
-			<Routes>
-				<Route path='/' element={!user ? <Login /> : <Dashboard />} />
-				<Route path='/signup' element={<Signup />} />
-				<Route path='/login' element={<Login />} />
-				<Route path='/dashboard' element={<Dashboard />} />
-
-				{/* <ProtectedRoute user={user}>
-					<Dashboard user={user} />
-				</ProtectedRoute> */}
-				<Route path='*' element={<PageNotFound />} />
-			</Routes>
+			<AuthProvider>
+				<Routes>
+					<Route exact path='/' element={!currentUser?.uid ? <Login /> : <Dashboard />} />
+					<Route path='/signup' element={<Signup />} />
+					<Route path='/login' element={<Login />} />
+					<Route path='/passwordreset' element={<ResetPW />} />
+					<Route element={<ProtectedRoute />}>
+						<Route path='/dashboard' element={<Dashboard />} />
+					</Route>
+					<Route path='*' element={<PageNotFound />} />
+				</Routes>
+			</AuthProvider>
 		</Router>
 	);
 }
